@@ -1,0 +1,5 @@
+fsprotect (1.0.0) unstable; urgency=low
+
+  * Initial Release (Closes: #520765)
+
+ -- Stefanos Harhalakis <v13@v13.gr>  Sat, 21 Mar 2009 15:29:43 +0200

@@ -1,0 +1,20 @@
+#!/bin/sh
+# Check if a file system is a unionfs
+# $1 = path
+
+[ -z "$1" ] && exit 1
+
+[ -e "/proc/mounts" ] || exit 1
+
+if [ "x$1" = "x/" ] ; then
+	T="$1"
+else
+	T="${1%/}"
+fi
+
+T=`grep "^[^ ]* $T aufs" /proc/mounts`
+
+[ -z "$T" ] && exit 1
+
+exit 0
+

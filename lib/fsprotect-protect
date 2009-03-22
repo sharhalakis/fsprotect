@@ -1,0 +1,103 @@
+#!/bin/bash
+#
+# $Id$
+#
+# Change a partition to aufs
+#
+# Parameters:
+#	$1	The mountpoint
+#	$2	tmpfs size
+#
+
+BASE0="/fsprotect"
+BASE="/fsprotect/fs"
+
+if [ "x$1" = "x" ] || [ "x$2" = "x" ] ; then
+	echo "Usage $0 [mountpoint] [tmpfs size]"
+	exit 1
+fi
+
+if ! [ -d "$1" ] ; then
+	echo "$1: Not a directory"
+fi
+
+# Remove trailing /
+MP="${1%/}"
+
+# Check whether a path ($1) is a mounted mountpoint
+is_mounted()
+{
+	# Forbid relative paths
+	[ "x${1#/}" = "x$1" ] && return 1
+
+	# Forbid /
+	[ "x$1" = "x/" ] && return 1
+
+	# Look mtab
+	T=$(grep " $1/* " /etc/mtab)
+
+	[ -z "$T" ] && return 1
+
+	# Check for virtual filesystems
+	T2=$(echo "$T" | grep -E " (tmpfs|rootfs|devpts|usbfs|sysfs|proc) ")
+
+	[ -z "$T2" ] || return 1
+
+	return 0
+}
+
+if ! is_mounted "$MP" ; then
+	echo "$1: Doesn't look like a supported/valid/mounted filesystem"
+	exit 1
+fi
+
+if is_aufs "$MP" ; then
+	echo "$1: Seems to be already protected"
+	exit 1
+fi
+
+echo "Proceeding with $MP"
+
+if ! [ -d "$BASE0" ] ; then
+	echo "$BASE0 is not a directory!"
+	echo "Something is wrong!"
+	exit 1
+fi
+
+[ -d "$BASE" ] || mkdir "$BASE"
+
+DST0=$(echo "${MP#/}" | sed 's,/,-,g')
+
+DST="$BASE/$DST0"
+
+DSTORIG="$DST/orig"
+DSTTMP="$DST/tmp"
+DSTAUFS="$DST/aufs"
+
+[ -d "$DST" ] || mkdir "$DST"
+[ -d "$DSTORIG" ] || mkdir "$DSTORIG"
+[ -d "$DSTTMP" ] || mkdir "$DSTTMP"
+[ -d "$DSTAUFS" ] || mkdir "$DSTAUFS"
+
+# All directories are created. Go-on
+
+set -e
+
+# Do this first to catch errors
+if ! mount -t tmpfs -o size=$2 none "$DSTTMP" ; then
+	echo "Failed to create tmpfs. Is '$2' a correct tmpfs size parameter?"
+	echo "Examples: 10M, 2G"
+	exit 1
+fi
+
+mount -o bind "${MP}" "$DSTORIG"
+mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
+umount "$MP"
+mount -o bind "$DSTAUFS" "$MP"
+umount "$DSTAUFS"
+mount -o remount,ro "$DSTORIG"
+
+echo "Done."
+
+exit 0
+

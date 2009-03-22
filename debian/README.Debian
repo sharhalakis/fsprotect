@@ -1,0 +1,43 @@
+fsprotect for Debian
+--------------------
+
+fsprotect will only act when the "fsprotect" parameter is passed to the kernel.
+Also, it will be disabled if a "nofsprotect" parameter is passed to the kernel.
+This means that when having a "fsprotect" and a "nofsprotect" parameter at the
+same time, the nofsprotect will be used.
+
+when fsprotect is in effect, a /fastboot file is created preventing filesystem
+checks from init scripts. Without this, the boot process will fail on fsck.
+Using the "nofsprotect" argument will prevent the creation of /fastboot.
+
+fsprotect is very useful for computers with public access like libraries, labs,
+etc. It is essential to also prevent kernel parameters from being altered.
+To do this you should add a password to grub as well (if you use grub).
+
+Root filesystem
+---------------
+
+To enable fsprotect for the root filesystem add:
+
+fsprotect=size
+
+to kernel. size should be the size of the tmpfs. You should make sure that
+there is enough memory+swap space available.
+
+Other filesystems
+-----------------
+
+To enable fsprotect for other filesystems edit /etd/default/fsprotect as needed
+
+Those filesystems will only be protected when fsprotect parameter is passed
+to the kernel.
+
+Currently there is no way to protect other filesystems without protecting /.
+Is there a reason to do so?
+
+Contact
+-------
+For suggestions, bug reports, etc contact:
+
+Stefanos Harhalakis <v13@v13.gr>
+

@@ -1,0 +1,21 @@
+Source: fsprotect
+Section: admin
+Priority: extra
+Maintainer: Stefanos Harhalakis <v13@v13.gr>
+Build-Depends: debhelper (>= 7), po-debconf
+Standards-Version: 3.8.0
+Homepage: http://www.v13.gr/
+
+Package: fsprotect
+Architecture: all
+Depends: aufs-tools, aufs-modules, initramfs-tools, debconf | debconf-2.0, ${misc:Depends}
+Description: Helper scripts to make immutable the filesystems
+ This is a set of scripts that make immutable the root and other filesystems.
+ Using aufs they pack a tmpfs filesystem and the filesystem forcing
+ changes to be written to the tmpfs.
+ .
+ The root filesystem is protected by an initramfs script. Other filesystems
+ are protected by an init script. All protected filesystems become read-only
+ ensuring their immutability even on power-offs.
+ .
+ This can be used for public computers to prevent damage or changes.

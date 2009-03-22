@@ -1,0 +1,120 @@
+#!/bin/sh
+#
+# fsprotect
+#
+
+# Change to yes for debug messages
+DEBUG=no
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+	# get pre-requisites
+	prereqs)
+		prereqs
+		exit 0
+	;;
+esac
+
+. scripts/functions
+
+#set -x 
+
+#
+# Echo a command and then run it
+#
+run_echo()
+{
+	if [ "$DEBUG" = "yes" ] ; then
+		_log_msg "$* \n"
+	fi
+
+	if ! $* ; then
+		panic "Failed!"
+		exit 1
+	fi
+}
+
+# Check if we want fsprotect
+want_fsprotect()
+{
+	[ -e /proc/cmdline ] || return 1
+#	grep "\<single\>" /proc/cmdline > /dev/null 2>&1 && return 1
+	grep "\<nofsprotect\>" /proc/cmdline > /dev/null 2>&1 && return 1
+	grep "\<fsprotect\>" /proc/cmdline > /dev/null 2>&1 && return 0
+
+	return 1
+}
+
+if ! want_fsprotect ; then
+	log_warning_msg "fsprotect: We don't want a fsprotect"
+	exit 0
+fi
+
+if ! [ -x /bin/is_aufs ] ; then
+	log_error_msg "is_aufs not found !"
+	exit 1
+fi
+
+if is_aufs / ; then
+	log_warning_msg "fsprotect: Already started"
+	exit 0
+fi
+
+# Load the module
+modprobe aufs
+
+# Determine tmpfs size or fallback to 512MB
+SZ=512M
+for x in `cat /proc/cmdline` ; do
+	case "$x" in 
+		fsprotect=*)
+			SZ="${x#fsprotect=}"
+			# SZ=`echo "$x" | cut -f2 -d=`
+			;;
+	esac
+done
+
+BASE=/fsprotect
+
+log_begin_msg "Setting up fsprotect (aufs):"
+[ "$DEBUG" = "yes" ] &&  _log_msg "#######################################################"
+[ -d $BASE ] || ( mkdir -m 700 $BASE || mkdir $BASE )
+[ -d $BASE/system ] || mkdir $BASE/system
+[ -d $BASE/tmp ] || mkdir $BASE/tmp
+[ -d $BASE/aufs ] || mkdir $BASE/aufs
+[ "$DEBUG" = "yes" ] && _log_msg "#######################################################"
+
+# What we do:
+# -----------
+# Bind the root filesystem to /fsprotect/system
+# Mount a tmpfs to /fsprotect/tmp
+# Create an aufs of /fsprotect/system and /fsprotect/tmp
+# Umount old root
+# Bind our aufs to the ${rootmnt}
+# Umount our aufs
+# Move /fsprotect/system and /fsprotect/tmp inside the aufs
+run_echo "mount -n -o bind ${rootmnt} $BASE/system"	# Mount the root filesystem
+run_echo "mount -n -t tmpfs -o size=$SZ none $BASE/tmp"	# Mount the tmpfs
+run_echo "mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs"	# Make the aufs
+run_echo "umount ${rootmnt}"			# Umount old root
+run_echo "mount -n -o bind $BASE/aufs ${rootmnt}"	# Use the aufs as the new root
+run_echo "umount $BASE/aufs"
+run_echo "mount -n -o move $BASE/system ${rootmnt}$BASE/system"	# Move those dirs inside the new root
+run_echo "mount -n -o move $BASE/tmp ${rootmnt}$BASE/tmp"
+
+# This one will prevent FSCKs
+touch ${rootmnt}/fastboot
+
+# [ "$DEBUG" = "yes" ] && _log_msg "#######################################################"
+# [ "$DEBUG" = "yes" ] && /sbin/aufsctl ${rootmnt} --list
+# [ "$DEBUG" = "yes" ] && _log_msg "#######################################################"
+log_end_msg "Done..."
+[ "$DEBUG" = "yes" ] && sleep 3
+exit 0
+
