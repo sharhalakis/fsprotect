@@ -3,3 +3,4 @@ fsprotect.postrm.debhelper
 fsprotect.substvars
 fsprotect
 fsprotect.postinst.debhelper
+files
