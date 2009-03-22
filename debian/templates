@@ -1,7 +1,0 @@
-Template: fsprotect/kernel_parameter
-Type: note
-_Description: Additional kernel parameter required
- To use fsprotect you should pass a fsprotect=size parameter to kernel.
- For example, add fsprotect=1024M to kernel parameters to be able to
- write up to 1GB of data/changes to the root filesystem. Be sure to have
- enough swap space.

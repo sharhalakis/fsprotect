@@ -1,9 +1,4 @@
 fsprotect: non-standard-toplevel-dir fsprotect/
-fsprotect: no-debconf-config
-fsprotect: postinst-uses-db-input
-fsprotect: possible-debconf-note-abuse postinst:39 fsprotect/kernel_parameter
 fsprotect: virtual-package-depends-without-real-package-depends
-fsprotect: init.d-script-does-not-implement-required-option /etc/init.d/fsprotect force-reload
-fsprotect: init.d-script-does-not-implement-required-option /etc/init.d/fsprotect restart
 fsprotect: package-contains-empty-directory fsprotect/system/
 fsprotect: package-contains-empty-directory fsprotect/tmp/
