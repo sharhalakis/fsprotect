@@ -1,0 +1,672 @@
+#LyX 1.6.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{color}
+\end_preamble
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 0
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+FSProtect - Filesystem Protection
+\end_layout
+
+\begin_layout Author
+Harhalakis Stefanos <v13@v13.gr>
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+FSProtect is a set of scripts that make immutable the root and other filesystems.
+ This means that whatever is written to the disk will not be actually written
+ and will be 
+\begin_inset Quotes eld
+\end_inset
+
+lost
+\begin_inset Quotes erd
+\end_inset
+
+ after the system is rebooted.
+\end_layout
+
+\begin_layout Standard
+FSProtect typical usage is for:
+\end_layout
+
+\begin_layout Itemize
+Public computers like those in libraries and labs
+\end_layout
+
+\begin_layout Itemize
+Testing purposes (i.e.
+ Test the upgrade of KDE3 -> KDE4 without actually changing anything to
+ the system)
+\end_layout
+
+\begin_layout Itemize
+Security
+\end_layout
+
+\begin_layout Standard
+FSProtect is written for Debian but can be also be ported to other distributions.
+ It is 100% dependent on the distribution so it cannot be made as a common
+ program for all distributions.
+\end_layout
+
+\begin_layout Section
+How it works
+\end_layout
+
+\begin_layout Standard
+FSProtect uses the 
+\begin_inset Quotes eld
+\end_inset
+
+Another UnionFS
+\begin_inset Quotes erd
+\end_inset
+
+ (aufs) filesystem and the tmpfs filesystem.
+ Aufs is available as additional modules for debian and tmpfs is included
+ in the kernel.
+ FSProtect uses aufs to combine an existing filesystem with a tmpfs, putting
+ tmpfs first in order.
+ This results in changes been written to the tmpfs instead of the actual
+ filesystem.
+ Since tmpfs is a virtual filesystem that stores changes to VM (RAM or swap),
+ everything is lost after a reboot.
+\end_layout
+
+\begin_layout Standard
+The big benefits of using fsprotect, except from filesystem protection are:
+\end_layout
+
+\begin_layout Itemize
+Immediate filesystem recovery - Since nothing is written on the disks, nothing
+ needs to be restored.
+ After a reboot everything is already in place.
+\end_layout
+
+\begin_layout Itemize
+Protection from violent shutdowns - Since existing filesystems are not modified
+ any more, they are mounted as read-only.
+ This means that the computer can be safely powered off without going through
+ the shutdown procedure.
+ For public computers, this saves the administrator from checking and repairing
+ destroyed filesystems.
+\end_layout
+
+\begin_layout Standard
+FSProtect works in two phases:
+\end_layout
+
+\begin_layout Enumerate
+Protect the root filesystem
+\end_layout
+
+\begin_layout Enumerate
+Protect other filesystems
+\end_layout
+
+\begin_layout Standard
+This is required since the root filesystem cannot be 
+\begin_inset Quotes eld
+\end_inset
+
+protected
+\begin_inset Quotes erd
+\end_inset
+
+ after it becomes /.
+ Other filesystems can be 
+\begin_inset Quotes eld
+\end_inset
+
+protected
+\begin_inset Quotes erd
+\end_inset
+
+ only before they start being used.
+\end_layout
+
+\begin_layout Subsection
+Root filesystem
+\end_layout
+
+\begin_layout Standard
+The root filesystem must be 
+\begin_inset Quotes eld
+\end_inset
+
+protected
+\begin_inset Quotes erd
+\end_inset
+
+ at the very first stages of the boot procedure.
+ This is done during the initramfs boot stage where the root filesystem
+ is mounted but hasn't become / yet (no pivot_root done).
+ This is accomplished by adding a local-bottom script to the initramfs.
+ 
+\end_layout
+
+\begin_layout Standard
+The script:
+\end_layout
+
+\begin_layout Enumerate
+Creates /fsprotect, /fsprotect/system, /fsprotect/tmp, /fsprotect/aufs.
+ Those are directories under the initial ram-based / which is available
+ during the initramfs boot procedure.
+ Those are not the directories of the real root filesystem.
+\end_layout
+
+\begin_layout Enumerate
+Binds the root filesystem to /fsprotect/system (mount -o bind)
+\end_layout
+
+\begin_layout Enumerate
+Mounts a tmpfs to /fsprotect/tmp
+\end_layout
+
+\begin_layout Enumerate
+Creates a aufs of /fsprotect/system and /fsprotect/tmp
+\end_layout
+
+\begin_layout Enumerate
+Umounts old root filesystem (from ${rootmnt})
+\end_layout
+
+\begin_layout Enumerate
+Binds the aufs to ${rootmnt}
+\end_layout
+
+\begin_layout Enumerate
+Umounts /fsprotect/aufs
+\end_layout
+
+\begin_layout Enumerate
+Moves /fsprotect/system and /fsprotect/tmp inside ${rootmnt}
+\end_layout
+
+\begin_layout Enumerate
+Create ${rootmnt}/fastboot to prevent attempts of fsck'ing the root filesystem
+\end_layout
+
+\begin_layout Standard
+At this point, ${rootmnt} points to a aufs filesystem that combines a read-only
+ physical root file-system and a tmpfs.
+ All changes that are written to ${rootmnt} are stored in the tmpfs and
+ are lost when the system reboots
+\end_layout
+
+\begin_layout Standard
+The part of the script that accomplishes this is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},language=bash"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+BASE=/fsprotect
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+log_begin_msg "Setting up fsprotect (aufs):"
+\end_layout
+
+\begin_layout Plain Layout
+
+[ -d $BASE ] || ( mkdir -m 700 $BASE || mkdir $BASE )
+\end_layout
+
+\begin_layout Plain Layout
+
+[ -d $BASE/system ] || mkdir $BASE/system
+\end_layout
+
+\begin_layout Plain Layout
+
+[ -d $BASE/tmp ] || mkdir $BASE/tmp
+\end_layout
+
+\begin_layout Plain Layout
+
+[ -d $BASE/aufs ] || mkdir $BASE/aufs
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -o bind ${rootmnt} $BASE/system
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -t tmpfs -o size=$SZ none $BASE/tmp
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs
+\end_layout
+
+\begin_layout Plain Layout
+
+umount ${rootmnt}
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -o bind $BASE/aufs ${rootmnt}
+\end_layout
+
+\begin_layout Plain Layout
+
+umount $BASE/aufs
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -o move $BASE/system ${rootmnt}$BASE/system
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -o move $BASE/tmp ${rootmnt}$BASE/tmp
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+touch ${rootmnt}/fastboot
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Other filesystems
+\end_layout
+
+\begin_layout Standard
+Other filesystems are protected during the boot procedure using an init
+ script.
+ This script needs to run just after the filesystems are mounted but before
+ anything else is done.
+ The init script is installed into single-user init procedure (S) with priority
+ 37.
+ This script reads /etc/default/fsprotect and protects the filesystems that
+ are specified there.
+ It relies on a helper script which it calls for each specified filesystem.
+\end_layout
+
+\begin_layout Subsubsection
+Helper script
+\end_layout
+
+\begin_layout Standard
+The helper script is installed as /lib/fsprotect/fsprotect-protect.
+ It is called as:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# /lib/fsprotect/fsprotect-protect <filesystem> <tmpfs-size>
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This script does the same thing the initramfs script did.
+ This is what it does:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},language=bash"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+BASE0="/fsprotect"
+\end_layout
+
+\begin_layout Plain Layout
+
+BASE="/fsprotect/fs" 
+\end_layout
+
+\begin_layout Plain Layout
+
+MP="${1%/}"
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+DST0=$(echo "${MP#/}" | sed 's,/,-,g')
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+DST="$BASE/$DST0"
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+DSTORIG="$DST/orig"
+\end_layout
+
+\begin_layout Plain Layout
+
+DSTTMP="$DST/tmp"
+\end_layout
+
+\begin_layout Plain Layout
+
+DSTAUFS="$DST/aufs" 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -o bind "${MP}" "$DSTORIG"
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
+\end_layout
+
+\begin_layout Plain Layout
+
+umount "$MP"
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -o bind "$DSTAUFS" "$MP"
+\end_layout
+
+\begin_layout Plain Layout
+
+umount "$DSTAUFS" mount -o remount,ro "$DSTORIG" 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Usage
+\end_layout
+
+\begin_layout Standard
+Installation is as easy as installing a debian package.
+ FSProtect can be enabled or disabled on demand.
+ Configuration is done differently for the root filesystem and for other
+ filesystems
+\end_layout
+
+\begin_layout Subsection
+Installation
+\end_layout
+
+\begin_layout Standard
+Ti install fsprotect, just install the debian package with dpkg:
+\begin_inset listings
+lstparams "basicstyle={\ttfamily}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# dpkg -i fsprotect_1.0.1_all.deb
+\end_layout
+
+\end_inset
+
+This will put everything in place.
+\end_layout
+
+\begin_layout Subsection
+Enabling and root filesystem
+\end_layout
+
+\begin_layout Standard
+To enable fsprotect you need to add the fsprotect kernel option.
+ The syntax is fsprotect=size, where size can be any size that can be understood
+ by mount.
+ For example:
+\begin_inset Newline newline
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+fsprotect=1024M
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\family default
+This will protect the root filesystem by using a 1024M tmpfs.
+ This limits the changes that can be performed to the root filesystem to
+ 1GB.
+ 
+\end_layout
+
+\begin_layout Subsection
+Other filesystems
+\end_layout
+
+\begin_layout Standard
+For non-root filesystems to be protected, fsprotect you need to:
+\end_layout
+
+\begin_layout Itemize
+Enable fsprotect with the kernel parameter
+\end_layout
+
+\begin_layout Itemize
+Specify the filesystems to be protected and their tmpfs size in /etc/default/fsp
+rotect
+\end_layout
+
+\begin_layout Standard
+A sample /etc/default/fsprotect can have the following line:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\family typewriter
+PROTECT=
+\begin_inset Quotes erd
+\end_inset
+
+/var=2048M /home=4096M
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+This will protect /var and /home filesystems using 2GB and 4GB tmpfs respectivel
+y.
+\end_layout
+
+\begin_layout Section
+Copyright, License and Contact Information
+\end_layout
+
+\begin_layout Subsection
+Copyright
+\end_layout
+
+\begin_layout Standard
+FSProtect is Copyright © 2009 by Stefanos Harhalakis.
+\end_layout
+
+\begin_layout Subsection
+License
+\end_layout
+
+\begin_layout Standard
+FSProtect is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+You can find the full license text at: http://www.gnu.org/licenses/
+\end_layout
+
+\begin_layout Subsection
+Contact
+\end_layout
+
+\begin_layout Standard
+For comments, request, bug reports and suggestions, contact Stefanos Harhalakis
+ via e-mail at v13@v13.gr
+\end_layout
+
+\end_body
+\end_document
