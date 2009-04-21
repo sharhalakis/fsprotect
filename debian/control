@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Stefanos Harhalakis <v13@v13.gr>
 Build-Depends: debhelper (>= 7)
-Standards-Version: 3.8.0
+Standards-Version: 3.8.1
 Homepage: http://www.v13.gr/
 
 Package: fsprotect

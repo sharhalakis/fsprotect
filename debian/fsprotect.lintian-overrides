@@ -1,4 +1,1 @@
-fsprotect: non-standard-toplevel-dir fsprotect/
 fsprotect: virtual-package-depends-without-real-package-depends
-fsprotect: package-contains-empty-directory fsprotect/system/
-fsprotect: package-contains-empty-directory fsprotect/tmp/

@@ -1,6 +1,9 @@
 fsprotect (1.0.2) unstable; urgency=low
 
   * Documentation (fsprotect.pdf).
+  * Standards version 3.8.1
+  * Create /fsprotect on-the-fly inside aufs-dir and remove /fsprotect/*
+    from debian/dirs
 
  -- Stefanos Harhalakis <v13@v13.gr>  Sun, 12 Apr 2009 15:32:11 +0300
 
