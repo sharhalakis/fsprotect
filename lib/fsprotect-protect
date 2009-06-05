@@ -46,6 +46,43 @@ is_mounted()
 	return 0
 }
 
+# Assumning that $1 was moved to $2 and $1 is now an aufs of $2,
+# restore all mount points by moving them back from $2 to $1.
+restore_dir_mp()
+{
+	# Don't use head, awk and sort. They are in /usr/bin
+	#T=$(cat /proc/mounts | grep -E "^[^[:space:]]* $2/" | awk '{print $2}' | sort -u | head -1)
+
+	CNT=1000
+	T=$(cat /proc/mounts | grep -E "^[^[:space:]]* $2/" | \
+		sed "s,^[^[:space:]]* \($2/[^[:space:]]*\) .*,\1,g" | ( \
+		while read line ; do
+			TCNT=${#line}
+			if [ "$TCNT" -lt "$CNT" ] ; then
+				CNT="$TCNT"
+				T="$line"
+			fi
+		done
+
+		[ "$CNT" -lt "1000" ] && echo "$T"
+
+		# Always be successful
+		true
+		)
+	   )
+
+	[ -z "$T" ] && return
+
+	TDST=$(echo $1/${T#$2} | sed 's,//,/,g')
+	if [ -d "$TDST" ] ; then
+		echo "mount --move $T $TDST"
+		mount --move $T $TDST
+		restore_dir_mp "$1" "$2"
+	else
+		echo "$TDST doesn not exist!!!"
+	fi
+}
+
 if ! is_mounted "$MP" ; then
 	echo "$1: Doesn't look like a supported/valid/mounted filesystem"
 	exit 1
@@ -71,11 +108,13 @@ DST0=$(echo "${MP#/}" | sed 's,/,-,g')
 DST="$BASE/$DST0"
 
 DSTORIG="$DST/orig"
+DSTMOVE="$DST/move"
 DSTTMP="$DST/tmp"
 DSTAUFS="$DST/aufs"
 
 [ -d "$DST" ] || mkdir "$DST"
 [ -d "$DSTORIG" ] || mkdir "$DSTORIG"
+[ -d "$DSTMOVE" ] || mkdir "$DSTMOVE"
 [ -d "$DSTTMP" ] || mkdir "$DSTTMP"
 [ -d "$DSTAUFS" ] || mkdir "$DSTAUFS"
 
@@ -92,9 +131,14 @@ fi
 
 mount -o bind "${MP}" "$DSTORIG"
 mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
-umount "$MP"
+# Move this here, in case it has other filesystems mounted beneath it
+mount --move "$MP" "$DSTMOVE"
 mount -o bind "$DSTAUFS" "$MP"
 umount "$DSTAUFS"
+# Move filesystems outside of it
+restore_dir_mp "$MP" "$DSTMOVE"
+# Umount it
+umount "$DSTMOVE"
 mount -o remount,ro "$DSTORIG"
 
 echo "Done."

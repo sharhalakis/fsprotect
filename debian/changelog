@@ -1,3 +1,13 @@
+fsprotect (1.0.3) unstable; urgency=low
+
+  * Don't show "We don't want fsprotect" unless there is a 'nofsprotect'
+    kernel option. (Closes: #530242)
+  * Improved documentation a bit thanks to Martin T. Krafft. (Closes: #530243)
+  * Fix bashism in initramfs local-bottom script.
+  * Make fsprotect work with dirs-in-dirs
+
+ -- Stefanos Harhalakis <v13@v13.gr>  Sat, 23 May 2009 13:19:33 +0300
+
 fsprotect (1.0.2) unstable; urgency=low
 
   * Documentation (fsprotect.pdf).
