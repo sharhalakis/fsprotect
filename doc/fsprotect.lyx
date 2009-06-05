@@ -1,4 +1,4 @@
-#LyX 1.6.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.2 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -539,7 +539,15 @@ Enabling and root filesystem
 
 \begin_layout Standard
 To enable fsprotect you need to add the fsprotect kernel option.
- The syntax is fsprotect=size, where size can be any size that can be understood
+ The fsprotect parameter takes one optional argument, which it passes to
+ mount(8) as the size option of the tmpfs.
+ It is the size in bytes, and K/M/G suffixes can be used as multiplicators.
+ If no argument is specified, mount(8) will create a tmpfs with size half
+ the system's memory.
+\end_layout
+
+\begin_layout Standard
+The syntax is fsprotect=size, where size can be any size that can be understood
  by mount.
  For example:
 \begin_inset Newline newline
@@ -552,6 +560,22 @@ To enable fsprotect you need to add the fsprotect kernel option.
 \end_inset
 
 fsprotect=1024M
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+or just:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+fsprotect
 \begin_inset Newline newline
 \end_inset
 
@@ -666,6 +690,19 @@ Contact
 \begin_layout Standard
 For comments, request, bug reports and suggestions, contact Stefanos Harhalakis
  via e-mail at v13@v13.gr
+\end_layout
+
+\begin_layout Section
+Changes
+\end_layout
+
+\begin_layout Paragraph
+23 May 2009:
+\end_layout
+
+\begin_layout Standard
+Better documentation for enabling fsprotect (Thanks to Martin T.
+ Krafft)
 \end_layout
 
 \end_body
