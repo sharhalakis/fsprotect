@@ -45,14 +45,18 @@ want_fsprotect()
 {
 	[ -e /proc/cmdline ] || return 1
 #	grep "\<single\>" /proc/cmdline > /dev/null 2>&1 && return 1
-	grep "\<nofsprotect\>" /proc/cmdline > /dev/null 2>&1 && return 1
+	grep "\<nofsprotect\>" /proc/cmdline > /dev/null 2>&1 && return 2
 	grep "\<fsprotect\>" /proc/cmdline > /dev/null 2>&1 && return 0
 
 	return 1
 }
 
-if ! want_fsprotect ; then
-	log_warning_msg "fsprotect: We don't want a fsprotect"
+want_fsprotect
+T=$?
+if ! [ "$T" = 0 ] ; then
+	if [ "$T" = 2 ] ; then
+		log_warning_msg "fsprotect: We don't want fsprotect"
+	fi
 	exit 0
 fi
 
@@ -74,7 +78,9 @@ SZ=512M
 for x in `cat /proc/cmdline` ; do
 	case "$x" in 
 		fsprotect=*)
-			SZ="${x#fsprotect=}"
+			# Avoid bashism for initramfs
+			# SZ="${x#fsprotect=}"
+			SZ=`echo "$x" | sed -e 's/^fsprotect=//'`
 			# SZ=`echo "$x" | cut -f2 -d=`
 			;;
 	esac
@@ -103,8 +109,7 @@ run_echo "mount -n -o bind ${rootmnt} $BASE/system"	# Mount the root filesystem
 run_echo "mount -n -t tmpfs -o size=$SZ none $BASE/tmp"	# Mount the tmpfs
 run_echo "mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs"	# Make the aufs
 run_echo "umount ${rootmnt}"			# Umount old root
-run_echo "mount -n -o bind $BASE/aufs ${rootmnt}"	# Use the aufs as the new root
-run_echo "umount $BASE/aufs"
+run_echo "mount -n -o move $BASE/aufs ${rootmnt}"	# Use the aufs as the new root
 run_echo "mkdir ${rootmnt}$BASE"	# Create the in-new-root directories
 run_echo "mkdir ${rootmnt}$BASE/system"
 run_echo "mkdir ${rootmnt}$BASE/tmp"
