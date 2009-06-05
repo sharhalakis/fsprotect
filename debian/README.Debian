@@ -14,6 +14,12 @@ fsprotect is very useful for computers with public access like libraries, labs,
 etc. It is essential to also prevent kernel parameters from being altered.
 To do this you should add a password to grub as well (if you use grub).
 
+Documentation
+-------------
+
+The complete documentation is in fsprotect.pdf. Please refer to that for more
+information.
+
 Root filesystem
 ---------------
 
@@ -23,6 +29,11 @@ fsprotect=size
 
 to kernel. size should be the size of the tmpfs. You should make sure that
 there is enough memory+swap space available.
+
+size parameter is optional but it is strongly suggested to be used. It is
+passed to mount(8) as the size option of the tmpfs. It is specified in bytes
+but K/M/G suffixes can be used as multiplicators. If no argument is specified,
+mount(8) will create a tmpfs with size half the system's memory.
 
 Other filesystems
 -----------------
