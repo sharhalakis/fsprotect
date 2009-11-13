@@ -29,7 +29,7 @@ case "$1" in
     ;;
 esac
 
-[ -x /usr/sbin/update-initramfs ] && /usr/sbin/update-initramfs -u > /dev/null
+which update-initramfs > /dev/null && update-initramfs -u > /dev/null
 
 #DEBHELPER#
 

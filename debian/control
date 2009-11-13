@@ -3,12 +3,12 @@ Section: admin
 Priority: extra
 Maintainer: Stefanos Harhalakis <v13@v13.gr>
 Build-Depends: debhelper (>= 7)
-Standards-Version: 3.8.1
+Standards-Version: 3.8.3
 Homepage: http://www.v13.gr/
 
 Package: fsprotect
 Architecture: all
-Depends: aufs-tools, aufs-modules, initramfs-tools, ${misc:Depends}
+Depends: aufs-modules, initramfs-tools, ${misc:Depends}
 Description: Helper scripts to make filesystems immutable
  This is a set of scripts that make immutable the root and other filesystems.
  Using aufs they pack a tmpfs filesystem and the filesystem forcing

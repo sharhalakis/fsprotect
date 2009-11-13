@@ -1,3 +1,14 @@
+fsprotect (1.0.4) unstable; urgency=low
+
+  * Remove dependency on aufs-tools (Closes: #555636)
+  * Standards version 3.8.3. No changes needed.
+  * Remove full-path from update-initramfs call (Fixes lintian warnings).
+  * Change init script dependency from mountall to $local_fs (Fixes lintian
+    error)
+  * Register fsprotect.pdf with doc-base (Fixes lintian info message).
+
+ -- Stefanos Harhalakis <v13@v13.gr>  Fri, 13 Nov 2009 12:39:53 +0200
+
 fsprotect (1.0.3) unstable; urgency=low
 
   * Don't show "We don't want fsprotect" unless there is a 'nofsprotect'

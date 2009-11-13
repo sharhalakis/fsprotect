@@ -1,7 +1,7 @@
 #! /bin/bash
 ### BEGIN INIT INFO
 # Provides:          fsprotect
-# Required-Start:    mountall
+# Required-Start:    $local_fs
 # Required-Stop:
 # Default-Start:     S
 # Default-Stop:
