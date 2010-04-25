@@ -51,6 +51,16 @@ want_fsprotect()
 	return 1
 }
 
+# Check if aufs is supported
+has_aufs()
+{
+	[ -e /proc/filesystems ] || return 1
+
+	grep "\<aufs\>" /proc/filesystems > /dev/null 2>&1 && return 0
+
+	return 1
+}
+
 want_fsprotect
 T=$?
 if ! [ "$T" = 0 ] ; then
@@ -61,7 +71,7 @@ if ! [ "$T" = 0 ] ; then
 fi
 
 if ! [ -x /bin/is_aufs ] ; then
-	log_error_msg "is_aufs not found !"
+	log_failure_msg "is_aufs not found !"
 	exit 1
 fi
 
@@ -71,17 +81,30 @@ if is_aufs / ; then
 fi
 
 # Load the module
-modprobe aufs
+modprobe aufs > /dev/null 2>&1 || true
+
+if ! has_aufs ; then
+	log_failure_msg "fsprotect: No aufs kernel support !"
+	exit 1
+fi
 
 # Determine tmpfs size or fallback to 512MB
 SZ=512M
 for x in `cat /proc/cmdline` ; do
 	case "$x" in 
 		fsprotect=*)
+			# According to bug #564141 this is supported
+			# by dash (tested - works)
+			SZ="${x#fsprotect=}"
+
 			# Avoid bashism for initramfs
-			# SZ="${x#fsprotect=}"
-			SZ=`echo "$x" | sed -e 's/^fsprotect=//'`
-			# SZ=`echo "$x" | cut -f2 -d=`
+			# SZ=`echo "$x" | sed -e 's/^fsprotect=//'`
+
+			# If size is "auto" then use half memory size
+			# which is tmpfs' default value
+			if [ "x$SZ" = "xauto" ] ; then
+				SZ='50%'
+			fi
 			;;
 	esac
 done
@@ -106,7 +129,7 @@ log_begin_msg "Setting up fsprotect (aufs):"
 # Umount our aufs
 # Move /fsprotect/system and /fsprotect/tmp inside the aufs
 run_echo "mount -n -o bind ${rootmnt} $BASE/system"	# Mount the root filesystem
-run_echo "mount -n -t tmpfs -o size=$SZ none $BASE/tmp"	# Mount the tmpfs
+run_echo "mount -n -t tmpfs -o mode=755,size=$SZ none $BASE/tmp"	# Mount the tmpfs
 run_echo "mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs"	# Make the aufs
 run_echo "umount ${rootmnt}"			# Umount old root
 run_echo "mount -n -o move $BASE/aufs ${rootmnt}"	# Use the aufs as the new root

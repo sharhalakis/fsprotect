@@ -6,7 +6,7 @@
 #
 # Parameters:
 #	$1	The mountpoint
-#	$2	tmpfs size
+#	$2	tmpfs size or auto
 #
 
 BASE0="/fsprotect"
@@ -83,6 +83,16 @@ restore_dir_mp()
 	fi
 }
 
+# Check whether the kernel supports aufs
+has_aufs()
+{
+	[ -e /proc/filesystems ] || return 1
+	
+	grep "\<aufs\>" /proc/filesystems > /dev/null 2>&1 && return 0
+
+	return 1
+}
+
 if ! is_mounted "$MP" ; then
 	echo "$1: Doesn't look like a supported/valid/mounted filesystem"
 	exit 1
@@ -122,12 +132,22 @@ DSTAUFS="$DST/aufs"
 
 set -e
 
+# If size is "auto" then use 50% of memory which is the default
+# for tmpfs
+SZ="$2"
+if [ "x$SZ" = "xauto" ] ; then
+	SZ="50%"
+fi
+
 # Do this first to catch errors
-if ! mount -t tmpfs -o size=$2 none "$DSTTMP" ; then
+if ! mount -t tmpfs -o size=$SZ none "$DSTTMP" ; then
 	echo "Failed to create tmpfs. Is '$2' a correct tmpfs size parameter?"
-	echo "Examples: 10M, 2G"
+	echo "Examples: 10M, 2G, 50%"
 	exit 1
 fi
+# Copy permissions
+chown --reference="$DSTORIG" "$DSTTMP"
+chmod --reference="$DSTORIG" "$DSTTMP"
 
 mount -o bind "${MP}" "$DSTORIG"
 mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"

@@ -24,6 +24,7 @@ install: build
 
 	dh_install initramfs-tools/hooks/fsprotect /usr/share/initramfs-tools/hooks
 	dh_install initramfs-tools/scripts/local-bottom/fsprotect /usr/share/initramfs-tools/scripts/local-bottom
+	dh_install initramfs-tools/scripts/local-bottom/fsprotect /usr/share/initramfs-tools/scripts/nfs-bottom
 	dh_install sbin/is_aufs /sbin
 	dh_install lib/fsprotect-protect /lib/fsprotect/
 	chmod 755 $(DST)/lib/fsprotect/fsprotect-protect

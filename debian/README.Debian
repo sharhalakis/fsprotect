@@ -14,6 +14,22 @@ fsprotect is very useful for computers with public access like libraries, labs,
 etc. It is essential to also prevent kernel parameters from being altered.
 To do this you should add a password to grub as well (if you use grub).
 
+aufs
+----
+
+In order for fsprotect to work, the system must support aufs. For debian
+systems:
+
+  * For older kernels (<=2.6.30) install aufs-source and module-assistant
+    and run:
+      # m-a prepare aufs
+      # m-a build aufs
+      # m-a install aufs
+      # update-initramfs -u
+
+  * For more recent kernels (>=2.6.31-1) nothing is needed. They already
+    include aufs as a module (see bug #541828).
+
 Documentation
 -------------
 
@@ -31,9 +47,11 @@ to kernel. size should be the size of the tmpfs. You should make sure that
 there is enough memory+swap space available.
 
 size parameter is optional but it is strongly suggested to be used. It is
-passed to mount(8) as the size option of the tmpfs. It is specified in bytes
-but K/M/G suffixes can be used as multiplicators. If no argument is specified,
-mount(8) will create a tmpfs with size half the system's memory.
+passed to mount(8) as the size option of the tmpfs. It can be one of:
+
+  * A size in bytes with or without multiplicators: 512M, 1G, 1024K
+  * A percentage of system's memory: 30%
+  * "auto" to use 50% of system's memory - the default for tmpfs
 
 Other filesystems
 -----------------
@@ -46,9 +64,18 @@ to the kernel.
 Currently there is no way to protect other filesystems without protecting /.
 Is there a reason to do so?
 
+fstab
+-----
+
+If you want to use fsprotect you should have a look at your mount options,
+especially for the root filesystem. See bug #530241
+(http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=530241)
+
 Contact
 -------
 For suggestions, bug reports, etc contact:
 
 Stefanos Harhalakis <v13@v13.gr>
+
+or file a bug report in debian's bugtracker.
 
