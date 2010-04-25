@@ -5,11 +5,13 @@ fsprotect (1.0.5) unstable; urgency=low
     it is supported by dash it should not be a problem (Closes: #564141)
   * Fix permissions of tmpfs mounts: Root FS gets 755 and other FSs get
     the same ownership/permissions of the original fs. (Closes: #561640)
-  * Drop dependency on aufs-modules and add run-time aufs check
-    (Closes: #566161)
+  * Drop dependency on aufs-modules and add run-time aufs check. This also
+    drops the lintian override. (Closes: #566161)
   * Add a copy of the initramfs portion to nfs-bottom to be usable for
     nfs mounts. This was reported to work. (Closes: #564138)
   * Standards version 3.8.4. No changes needed.
+  * Switched to CDBS
+  * Changed is_aufs.1 section to 1 (was 8).
 
  -- Stefanos Harhalakis <v13@v13.gr>  Sun, 25 Apr 2010 12:52:36 +0300
 

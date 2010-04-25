@@ -146,8 +146,8 @@ if ! mount -t tmpfs -o size=$SZ none "$DSTTMP" ; then
 	exit 1
 fi
 # Copy permissions
-chown --reference="$DSTORIG" "$DSTTMP"
-chmod --reference="$DSTORIG" "$DSTTMP"
+chown --reference="$MP" "$DSTTMP"
+chmod --reference="$MP" "$DSTTMP"
 
 mount -o bind "${MP}" "$DSTORIG"
 mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
