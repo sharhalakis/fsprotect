@@ -12,6 +12,8 @@ fsprotect (1.0.5) unstable; urgency=low
   * Standards version 3.8.4. No changes needed.
   * Switched to CDBS
   * Changed is_aufs.1 section to 1 (was 8).
+  * Install is_aufs in /bin instead of /sbin (thanks to LI Daobing
+    <lidaobing@debian.org> for noting the incosistency)
 
  -- Stefanos Harhalakis <v13@v13.gr>  Sun, 25 Apr 2010 12:52:36 +0300
 

@@ -19,5 +19,5 @@ manual_add_modules aufs
 # force_load aufs
 
 copy_exec /bin/grep "/bin"
-copy_exec /sbin/is_aufs "/bin"
+copy_exec /bin/is_aufs "/bin"
 
