@@ -90,8 +90,12 @@ fi
 
 # Determine tmpfs size or fallback to 512MB
 SZ=512M
+fsprotect_skip=
 for x in `cat /proc/cmdline` ; do
 	case "$x" in 
+		fsprotect_skip=*)
+			fsprotect_skip="${x#fsprotect_skip=}"
+			;;
 		fsprotect=*)
 			# According to bug #564141 this is supported
 			# by dash (tested - works)
@@ -138,6 +142,16 @@ run_echo "mkdir ${rootmnt}$BASE/system"
 run_echo "mkdir ${rootmnt}$BASE/tmp"
 run_echo "mount -n -o move $BASE/system ${rootmnt}$BASE/system"	# Move those dirs inside the new root
 run_echo "mount -n -o move $BASE/tmp ${rootmnt}$BASE/tmp"
+
+if ! [ -z "${fsprotect_skip}" ]; then
+	run_echo "mount -n -o remount,rw ${rootmnt}$BASE/system"
+	OLDIFS="$IFS"
+	IFS=,
+	for x in $fsprotect_skip; do
+		_log_msg "Excluding ${x} from aufs"
+		IFS="$OLDIFS" run_echo "mount -n -o bind ${rootmnt}$BASE/system${x} ${rootmnt}${x}"
+	done
+fi
 
 # This one will prevent FSCKs
 touch ${rootmnt}/fastboot
