@@ -15,9 +15,10 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
-manual_add_modules aufs
-# force_load aufs
+manual_add_modules overlay
+# force_load overlay
 
 copy_exec /bin/grep "/bin"
-copy_exec /bin/is_aufs "/bin"
+copy_exec /bin/touch "/bin"
+copy_exec /bin/is_overlayfs "/bin"
 
