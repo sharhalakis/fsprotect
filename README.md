@@ -70,3 +70,8 @@ Stefanos Harhalakis <v13@v13.gr>
 
 fsprotect is ditributed under the GPLv3 license
 
+# Build
+
+	cd fsprotect
+	lyx -e pdf doc/fsprotect.lyx
+	debuild -us -uc -b
