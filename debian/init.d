@@ -3,7 +3,7 @@
 # Provides:          fsprotect
 # Required-Start:    $local_fs
 # Required-Stop:
-# Default-Start:     S
+# Default-Start:     2 3 4 5
 # Default-Stop:
 # Short-Description: Lock/protect filesystems
 # Description:       Lock/protect filesystems that are defined in /etc/default/fsprotect
@@ -42,11 +42,11 @@ is_enabled()
 # Load module
 load_module()
 {
-	T=$(grep "\<aufs\>" /proc/filesystems)
+	T=$(grep "\<overlay\>" /proc/filesystems)
 
 	if [ -z "$T" ] ; then
-		if ! modprobe aufs ; then
-			log_failure_msg "aufs is not available"
+		if ! modprobe overlay ; then
+			log_failure_msg "overlay is not available"
 			return 1
 		fi
 	fi
@@ -76,7 +76,7 @@ do_start()
 
 	for f in $PROTECT ; do
 		if [ -z "$(echo "$f" | grep =)" ] ; then
-			f="$f=512M"
+			f="$f=auto"
 		fi
 
 		# We can't use "cut" here because it exists in /usr/sbin.
