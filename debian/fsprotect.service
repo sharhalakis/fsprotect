@@ -1,5 +1,5 @@
 [Unit]
-Description=Filesystem Protect
+Description=Filesystem Protection
 After=local-fs.target
 Requires=local-fs.target
 

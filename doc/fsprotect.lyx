@@ -231,7 +231,11 @@ Mounts a tmpfs to /fsprotect/tmp
 \end_layout
 
 \begin_layout Enumerate
-Creates a overlay of /fsprotect/system and /fsprotect/tmp/upper, /fsprotect/tmp/work
+Create necessary directories /fsprotect/tmp/upper, /fsprotect/tmp/work
+\end_layout
+
+\begin_layout Enumerate
+Creates a overlayfs of /fsprotect/system and /fsprotect/tmp/upper, /fsprotect/tmp/work
 \end_layout
 
 \begin_layout Enumerate
@@ -378,12 +382,11 @@ Other filesystems
 \end_layout
 
 \begin_layout Standard
-Other filesystems are protected during the boot procedure using an init
+Other filesystems are protected during the boot procedure using an systemd
  script.
  This script needs to run just after the filesystems are mounted but before
  anything else is done.
- The init script is installed into single-user init procedure (S) with priority
- 37.
+ The systemd script is installed After=local-fs.target and WantedBy=basic.target .
  This script reads /etc/default/fsprotect and protects the filesystems that
  are specified there.
  It relies on a helper script which it calls for each specified filesystem.

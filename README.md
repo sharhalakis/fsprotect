@@ -36,19 +36,13 @@ The whole protection procedure is achieved with the following steps (assuming yo
  8. `umount /fsprotect/fs/test/overlay`
  9. `mount -o remount,ro /fsprotect/fs/test/orig`
 
-Recursion filesystem is not support.
+**Note**: Recursion filesystem is not support.
 
 ## Boot
 
 The protection of the root filesystem is a very special case since all other filesystems are mounted beneath it. For fsprotect to succeed, the above procedure needs to be run before the root filesystem is moved to /. To achieve this, fsprotect uses an initramfs script that runs very early in the boot process, after the root filesystem is mounted but before is is moved to /. It then exchanges the existing filesystem with an overlayfs and lets the boot procedure continue.
 
 The protection of non-root filesystems is somehow easier. For each filesystem, fsprotect runs the above procedure exchanging the existing filesystem with an overlayfs.
-
-# Build
-
-	cd fsprotect
-	lyx -e pdf doc/fsprotect.lyx
-	debuild -us -uc -b
 
 # Installation
 

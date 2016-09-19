@@ -15,7 +15,7 @@ etc. It is essential to also prevent kernel parameters from being altered.
 To do this you should add a password to grub as well (if you use grub).
 
 overlayfs
-----
+---------
 
 In order for fsprotect to work, the system must support overlayfs. For debian
 systems:
@@ -49,7 +49,7 @@ passed to mount(8) as the size option of the tmpfs. It can be one of:
 Other filesystems
 -----------------
 
-To enable fsprotect for other filesystems edit /etd/default/fsprotect as needed
+To enable fsprotect for other filesystems edit /etc/default/fsprotect as needed
 
 Those filesystems will only be protected when fsprotect parameter is passed
 to the kernel.
