@@ -1,0 +1,11 @@
+[Unit]
+Description=Filesystem Protect
+After=local-fs.target
+Requires=local-fs.target
+
+[Service]
+EnvironmentFile=/etc/default/fsprotect
+ExecStart=/bin/fsprotect $PROTECT
+
+[Install]
+WantedBy=basic.target
