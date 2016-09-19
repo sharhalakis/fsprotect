@@ -124,14 +124,14 @@ FSProtect uses the
 \begin_inset Quotes eld
 \end_inset
 
-Another UnionFS
+OverlayFS
 \begin_inset Quotes erd
 \end_inset
 
- (aufs) filesystem and the tmpfs filesystem.
- Aufs is available as additional modules for debian and tmpfs is included
+ filesystem and the tmpfs filesystem.
+ OverlayFS is available since kernel version 3.18 and tmpfs is included
  in the kernel.
- FSProtect uses aufs to combine an existing filesystem with a tmpfs, putting
+ FSProtect uses overlayfs to combine an existing filesystem with a tmpfs, putting
  tmpfs first in order.
  This results in changes been written to the tmpfs instead of the actual
  filesystem.
@@ -216,7 +216,7 @@ The script:
 \end_layout
 
 \begin_layout Enumerate
-Creates /fsprotect, /fsprotect/system, /fsprotect/tmp, /fsprotect/aufs.
+Creates /fsprotect, /fsprotect/system, /fsprotect/tmp, /fsprotect/overlay.
  Those are directories under the initial ram-based / which is available
  during the initramfs boot procedure.
  Those are not the directories of the real root filesystem.
@@ -231,7 +231,7 @@ Mounts a tmpfs to /fsprotect/tmp
 \end_layout
 
 \begin_layout Enumerate
-Creates a aufs of /fsprotect/system and /fsprotect/tmp
+Creates a overlay of /fsprotect/system and /fsprotect/tmp/upper, /fsprotect/tmp/work
 \end_layout
 
 \begin_layout Enumerate
@@ -239,11 +239,11 @@ Umounts old root filesystem (from ${rootmnt})
 \end_layout
 
 \begin_layout Enumerate
-Binds the aufs to ${rootmnt}
+Binds the overlayfs to ${rootmnt}
 \end_layout
 
 \begin_layout Enumerate
-Umounts /fsprotect/aufs
+Umounts /fsprotect/overlay
 \end_layout
 
 \begin_layout Enumerate
@@ -255,7 +255,7 @@ Create ${rootmnt}/fastboot to prevent attempts of fsck'ing the root filesystem
 \end_layout
 
 \begin_layout Standard
-At this point, ${rootmnt} points to a aufs filesystem that combines a read-only
+At this point, ${rootmnt} points to a overlay filesystem that combines a read-only
  physical root file-system and a tmpfs.
  All changes that are written to ${rootmnt} are stored in the tmpfs and
  are lost when the system reboots
@@ -282,7 +282,7 @@ BASE=/fsprotect
 
 \begin_layout Plain Layout
 
-log_begin_msg "Setting up fsprotect (aufs):"
+log_begin_msg "Setting up fsprotect (overlayfs):"
 \end_layout
 
 \begin_layout Plain Layout
@@ -302,7 +302,7 @@ log_begin_msg "Setting up fsprotect (aufs):"
 
 \begin_layout Plain Layout
 
-[ -d $BASE/aufs ] || mkdir $BASE/aufs
+[ -d $BASE/overlay ] || mkdir $BASE/overlay
 \end_layout
 
 \begin_layout Plain Layout
@@ -321,7 +321,17 @@ mount -n -t tmpfs -o size=$SZ none $BASE/tmp
 
 \begin_layout Plain Layout
 
-mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs
+[ -d $BASE/tmp/upper ] || mkdir $BASE/tmp/upper
+\end_layout
+
+\begin_layout Plain Layout
+
+[ -d $BASE/tmp/work ] || mkdir $BASE/tmp/work
+\end_layout
+
+\begin_layout Plain Layout
+
+mount -n -t overlay -o upperdir=$BASE/tmp/upper,lowerdir=$BASE/system,workdir=$BASE/tmp/work overlay $BASE/overlay
 \end_layout
 
 \begin_layout Plain Layout
@@ -331,12 +341,12 @@ umount ${rootmnt}
 
 \begin_layout Plain Layout
 
-mount -n -o bind $BASE/aufs ${rootmnt}
+mount -n -o bind $BASE/overlay ${rootmnt}
 \end_layout
 
 \begin_layout Plain Layout
 
-umount $BASE/aufs
+umount $BASE/overlay
 \end_layout
 
 \begin_layout Plain Layout
@@ -464,7 +474,7 @@ DSTTMP="$DST/tmp"
 
 \begin_layout Plain Layout
 
-DSTAUFS="$DST/aufs" 
+DSTOVERLAY="$DST/overlay" 
 \end_layout
 
 \begin_layout Plain Layout
@@ -478,7 +488,7 @@ mount -o bind "${MP}" "$DSTORIG"
 
 \begin_layout Plain Layout
 
-mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
+mount -t overlay -o "upperdir=$DSTTMP/upper,lowerdir=$DSTORIG,workdir=$DSTTMP/work" overlay "$DSTOVERLAY"
 \end_layout
 
 \begin_layout Plain Layout
@@ -488,12 +498,12 @@ umount "$MP"
 
 \begin_layout Plain Layout
 
-mount -o bind "$DSTAUFS" "$MP"
+mount -o bind "$DSTOVERLAY" "$MP"
 \end_layout
 
 \begin_layout Plain Layout
 
-umount "$DSTAUFS" mount -o remount,ro "$DSTORIG" 
+umount "$DSTOVERLAY" mount -o remount,ro "$DSTORIG" 
 \end_layout
 
 \end_inset

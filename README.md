@@ -2,7 +2,7 @@
 
 fsprotect is a set of scripts, customized for debian systems that protect existing filesystems.
 
-It uses the AUFS filesystem and some initramfs magic to protect the root filesystem. It also uses a simple init script to protect other filesystems as early as possible.
+It uses the OverlayFS filesystem and some initramfs magic to protect the root filesystem. It also uses a simple init script to protect other filesystems as early as possible.
 
 fsprotect is excellent for public computers like those in libraries, labs, etc. It will ease the life of all administrators with a couple of simple steps.
 
@@ -20,32 +20,39 @@ The drawbacks of using fsprotect:
 
 # How it works
 
-fsprotect uses AUFS to combine two filesystems in one. AUFS does exactly that: It merges two existing filesystems in one and distributes changes among them.
+fsprotect uses OverlayFS to combine two filesystems in one. OverlayFS does exactly that: It merges two existing filesystems in one and distributes changes among them.
 
 For each protected filesystem, fsprotect combines the existing filesystem with a tmpfs, forcing all changes to be written to the tmpfs. This means that nothing is ever written to the disks and all changes are stored in the tmpfs. tmpfs is a memory based filesystem, similar to ramdisk but using VM instead of real memory, allowing its contents to be swapped out.
 
 The whole protection procedure is achieved with the following steps (assuming you want to protect /test). They are performed by fsprotect; you don't have to do any of them:
 
- 1. There is a directory named /fsprotect. Three other directories are created inside it: /fsprotect/fs/test/orig, /fsprotect/fs/test/tmp and /fsprotect/fs/test/aufs
+ 1. There is a directory named /fsprotect. Three other directories are created inside it: /fsprotect/fs/test/orig, /fsprotect/fs/test/tmp and /fsprotect/fs/test/overlay
  2. `mount -t tmpfs -o size=XXXX none /fsprotect/fs/test/tmp`
- 3. `mount -o bind /test /fsprotect/fs/test/orig`
- 4. `mount -t aufs -o dirs=/fsprotect/fs/test/tmp=rw:/fsprotect/test/orig=ro none /fsprotect/test/aufs`
- 5. `umount /test`
- 6. `mount -o bind /fsprotect/fs/test/aufs /test`
- 7. `umount /fsprotect/fs/test/aufs`
- 8. `mount -o remount,ro /fsprotect/fs/test/orig`
+ 3. `mkdir /fsprotect/fs/test/tmp/{upper,work}`
+ 4. `mount -o bind /test /fsprotect/fs/test/orig`
+ 5. `mount -t overlay -o upperdir=/fsprotect/fs/test/tmp/upper,lowerdir=/fsprotect/fs/test/orig,workdir=/fsprotect/fs/test/tmp/work overlay /fsprotect/test/overlay`
+ 6. `umount /test`
+ 7. `mount -o bind /fsprotect/fs/test/overlay /test`
+ 8. `umount /fsprotect/fs/test/overlay`
+ 9. `mount -o remount,ro /fsprotect/fs/test/orig`
 
-The actual steps are somehow more complicated to take care of filesystems inside other filesystems.
+Recursion filesystem is not support.
 
 ## Boot
 
-The protection of the root filesystem is a very special case since all other filesystems are mounted beneath it. For fsprotect to succeed, the above procedure needs to be run before the root filesystem is moved to /. To achieve this, fsprotect uses an initramfs script that runs very early in the boot process, after the root filesystem is mounted but before is is moved to /. It then exchanges the existing filesystem with an aufs and lets the boot procedure continue.
+The protection of the root filesystem is a very special case since all other filesystems are mounted beneath it. For fsprotect to succeed, the above procedure needs to be run before the root filesystem is moved to /. To achieve this, fsprotect uses an initramfs script that runs very early in the boot process, after the root filesystem is mounted but before is is moved to /. It then exchanges the existing filesystem with an overlayfs and lets the boot procedure continue.
 
-The protection of non-root filesystems is somehow easier. For each filesystem, fsprotect runs the above procedure exchanging the existing filesystem with an aufs.
+The protection of non-root filesystems is somehow easier. For each filesystem, fsprotect runs the above procedure exchanging the existing filesystem with an overlayfs.
+
+# Build
+
+	cd fsprotect
+	lyx -e pdf doc/fsprotect.lyx
+	debuild -us -uc -b
 
 # Installation
 
-fsprotect is available as a debian package. It depends on aufs, so you'll need that too.
+fsprotect is available as a debian package.
 
 To install fsprotect do:
 
@@ -70,8 +77,3 @@ Stefanos Harhalakis <v13@v13.gr>
 
 fsprotect is ditributed under the GPLv3 license
 
-# Build
-
-	cd fsprotect
-	lyx -e pdf doc/fsprotect.lyx
-	debuild -us -uc -b

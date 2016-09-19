@@ -14,21 +14,14 @@ fsprotect is very useful for computers with public access like libraries, labs,
 etc. It is essential to also prevent kernel parameters from being altered.
 To do this you should add a password to grub as well (if you use grub).
 
-aufs
+overlayfs
 ----
 
-In order for fsprotect to work, the system must support aufs. For debian
+In order for fsprotect to work, the system must support overlayfs. For debian
 systems:
 
-  * For older kernels (<=2.6.30) install aufs-source and module-assistant
-    and run:
-      # m-a prepare aufs
-      # m-a build aufs
-      # m-a install aufs
-      # update-initramfs -u
-
-  * For more recent kernels (>=2.6.31-1) nothing is needed. They already
-    include aufs as a module (see bug #541828).
+  * For more recent kernels (>=3.18) nothing is needed. They already
+    include overlay as a module .
 
 Documentation
 -------------
