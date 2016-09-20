@@ -2,6 +2,8 @@
 Description=Filesystem Protection
 After=local-fs.target
 Requires=local-fs.target
+Before=sysinit.target
+DefaultDependencies=no
 
 [Service]
 EnvironmentFile=/etc/default/fsprotect
