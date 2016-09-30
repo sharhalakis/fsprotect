@@ -6,6 +6,7 @@ Before=sysinit.target
 DefaultDependencies=no
 
 [Service]
+Type=oneshot
 EnvironmentFile=/etc/default/fsprotect
 ExecStart=/bin/fsprotect $PROTECT
 
