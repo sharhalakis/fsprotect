@@ -1,0 +1,14 @@
+[Unit]
+Description=Filesystem Protection
+After=local-fs.target
+Requires=local-fs.target
+Before=sysinit.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/fsprotect
+ExecStart=/bin/fsprotect $PROTECT
+
+[Install]
+WantedBy=basic.target

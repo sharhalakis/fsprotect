@@ -11,7 +11,7 @@ DEB_DH_INSTALLINIT_ARGS=--no-restart-on-upgrade --no-start
 binary/fsprotect:: postinstall/fsprotect
 
 install/fsprotect::
-	dh_installman debian/is_aufs.1
+	dh_installman debian/is_overlayfs.1
 
 postinstall/fsprotect:: install/fsprotect
 	chmod 755 $(DEB_DESTDIR)/lib/fsprotect/fsprotect-protect

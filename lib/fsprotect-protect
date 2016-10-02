@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# Change a partition to aufs
+# Change a partition to overlayfs
 #
 # Parameters:
 #	$1	The mountpoint
@@ -46,7 +46,7 @@ is_mounted()
 	return 0
 }
 
-# Assumning that $1 was moved to $2 and $1 is now an aufs of $2,
+# Assumning that $1 was moved to $2 and $1 is now an overlayfs of $2,
 # restore all mount points by moving them back from $2 to $1.
 restore_dir_mp()
 {
@@ -83,12 +83,12 @@ restore_dir_mp()
 	fi
 }
 
-# Check whether the kernel supports aufs
-has_aufs()
+# Check whether the kernel supports overlay
+has_overlay()
 {
 	[ -e /proc/filesystems ] || return 1
 	
-	grep "\<aufs\>" /proc/filesystems > /dev/null 2>&1 && return 0
+	grep "\<overlay\>" /proc/filesystems > /dev/null 2>&1 && return 0
 
 	return 1
 }
@@ -98,7 +98,7 @@ if ! is_mounted "$MP" ; then
 	exit 1
 fi
 
-if is_aufs "$MP" ; then
+if is_overlayfs "$MP" ; then
 	echo "$1: Seems to be already protected"
 	exit 1
 fi
@@ -120,13 +120,13 @@ DST="$BASE/$DST0"
 DSTORIG="$DST/orig"
 DSTMOVE="$DST/move"
 DSTTMP="$DST/tmp"
-DSTAUFS="$DST/aufs"
+DSTOVERLAY="$DST/overlay"
 
 [ -d "$DST" ] || mkdir "$DST"
 [ -d "$DSTORIG" ] || mkdir "$DSTORIG"
 [ -d "$DSTMOVE" ] || mkdir "$DSTMOVE"
 [ -d "$DSTTMP" ] || mkdir "$DSTTMP"
-[ -d "$DSTAUFS" ] || mkdir "$DSTAUFS"
+[ -d "$DSTOVERLAY" ] || mkdir "$DSTOVERLAY"
 
 # All directories are created. Go-on
 
@@ -149,14 +149,19 @@ fi
 chown --reference="$MP" "$DSTTMP"
 chmod --reference="$MP" "$DSTTMP"
 
+[ -d "$DSTTMP/upper" ] || mkdir "$DSTTMP/upper"
+[ -d "$DSTTMP/work" ] || mkdir "$DSTTMP/work"
+
 mount -o bind "${MP}" "$DSTORIG"
-mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
+mount -t overlay -o "upperdir=$DSTTMP/upper,lowerdir=$DSTORIG,workdir=$DSTTMP/work" overlay "$DSTOVERLAY"
 # Move this here, in case it has other filesystems mounted beneath it
-mount --move "$MP" "$DSTMOVE"
-mount -o bind "$DSTAUFS" "$MP"
-umount "$DSTAUFS"
+#mount --move "$MP" "$DSTMOVE"
+mount -o bind "$MP" "$DSTMOVE"
+umount "$MP"
+mount -o bind "$DSTOVERLAY" "$MP"
+umount "$DSTOVERLAY"
 # Move filesystems outside of it
-restore_dir_mp "$MP" "$DSTMOVE"
+#restore_dir_mp "$MP" "$DSTMOVE"
 # Umount it
 umount "$DSTMOVE"
 mount -o remount,ro "$DSTORIG"

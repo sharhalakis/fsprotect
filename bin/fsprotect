@@ -1,0 +1,77 @@
+#! /bin/bash
+# Author: Stefanos Harhalakis <v13@v13.gr>
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/bin:/lib/fsprotect
+DESC="Filesystem protection"
+NAME=fsprotect
+
+# Check whether fsprotect should be enabled
+is_enabled()
+{
+	T=$(grep '\<fsprotect\>' /proc/cmdline)
+
+	[ -z "$T" ] && return 1
+
+	return 0
+}
+
+# Load module
+load_module()
+{
+	T=$(grep "\<overlay\>" /proc/filesystems)
+
+	if [ -z "$T" ] ; then
+		if ! modprobe overlay ; then
+			echo "overlay is not available"
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+# Lock filesystems
+do_start()
+{
+	is_enabled || return 0
+
+	[ -z "$@" ] && return 0
+
+	load_module || return 1
+	
+	# 
+	# VERBOSE="yes"
+
+	STATUS=0
+
+	echo "Protecting filesystems"
+
+	for f in $@ ; do
+		if [ -z "$(echo "$f" | grep =)" ] ; then
+			f="$f=auto"
+		fi
+
+		# We can't use "cut" here because it exists in /usr/sbin.
+		# Use sed from /bin instead
+		T1=$(echo "$f" | sed 's/=.*//')
+		T2=$(echo "$f" | sed 's/.*=//')
+
+		[ "$VERBOSE" != "no" ] && echo "$T1"
+
+		if fsprotect-protect "$T1" "$T2" > /dev/null ; then
+			[ "$VERBOSE" != "no" ] && echo "(OK)"
+		else
+			[ "$VERBOSE" != "no" ] && echo "(Failed)"
+			STATUS=1
+		fi
+	done
+
+	echo $STATUS
+
+	return 0
+}
+
+do_start "$@"

@@ -51,12 +51,12 @@ want_fsprotect()
 	return 1
 }
 
-# Check if aufs is supported
-has_aufs()
+# Check if overlay is supported
+has_overlay()
 {
 	[ -e /proc/filesystems ] || return 1
 
-	grep "\<aufs\>" /proc/filesystems > /dev/null 2>&1 && return 0
+	grep "\<overlay\>" /proc/filesystems > /dev/null 2>&1 && return 0
 
 	return 1
 }
@@ -70,21 +70,21 @@ if ! [ "$T" = 0 ] ; then
 	exit 0
 fi
 
-if ! [ -x /bin/is_aufs ] ; then
-	log_failure_msg "is_aufs not found !"
+if ! [ -x /bin/is_overlayfs ] ; then
+	log_failure_msg "is_overlayfs not found !"
 	exit 1
 fi
 
-if is_aufs / ; then
+if is_overlayfs / ; then
 	log_warning_msg "fsprotect: Already started"
 	exit 0
 fi
 
 # Load the module
-modprobe aufs > /dev/null 2>&1 || true
+modprobe overlay > /dev/null 2>&1 || true
 
-if ! has_aufs ; then
-	log_failure_msg "fsprotect: No aufs kernel support !"
+if ! has_overlay ; then
+	log_failure_msg "fsprotect: No overlay kernel support !"
 	exit 1
 fi
 
@@ -111,28 +111,30 @@ done
 
 BASE=/fsprotect
 
-log_begin_msg "Setting up fsprotect (aufs):"
+log_begin_msg "Setting up fsprotect (overlay):"
 [ "$DEBUG" = "yes" ] &&  _log_msg "#######################################################"
 [ -d $BASE ] || ( mkdir -m 700 $BASE || mkdir $BASE )
 [ -d $BASE/system ] || mkdir $BASE/system
 [ -d $BASE/tmp ] || mkdir $BASE/tmp
-[ -d $BASE/aufs ] || mkdir $BASE/aufs
+[ -d $BASE/overlay ] || mkdir $BASE/overlay
 [ "$DEBUG" = "yes" ] && _log_msg "#######################################################"
 
 # What we do:
 # -----------
 # Bind the root filesystem to /fsprotect/system
 # Mount a tmpfs to /fsprotect/tmp
-# Create an aufs of /fsprotect/system and /fsprotect/tmp
+# Create an overlay of /fsprotect/system and /fsprotect/tmp
 # Umount old root
-# Bind our aufs to the ${rootmnt}
-# Umount our aufs
-# Move /fsprotect/system and /fsprotect/tmp inside the aufs
+# Bind our overlay to the ${rootmnt}
+# Umount our overlay
+# Move /fsprotect/system and /fsprotect/tmp inside the overlay
 run_echo "mount -n -o bind ${rootmnt} $BASE/system"	# Mount the root filesystem
 run_echo "mount -n -t tmpfs -o mode=755,size=$SZ none $BASE/tmp"	# Mount the tmpfs
-run_echo "mount -n -t aufs -o dirs=$BASE/tmp=rw:$BASE/system=ro none $BASE/aufs"	# Make the aufs
+[ -d $BASE/tmp/upper ] || mkdir $BASE/tmp/upper
+[ -d $BASE/tmp/work ] || mkdir $BASE/tmp/work
+run_echo "mount -n -t overlay -o upperdir=$BASE/tmp/upper,lowerdir=$BASE/system,workdir=$BASE/tmp/work overlay $BASE/overlay"	# Make the overlayfs
 run_echo "umount ${rootmnt}"			# Umount old root
-run_echo "mount -n -o move $BASE/aufs ${rootmnt}"	# Use the aufs as the new root
+run_echo "mount -n -o move $BASE/overlay ${rootmnt}"	# Use the overlay as the new root
 run_echo "mkdir ${rootmnt}$BASE"	# Create the in-new-root directories
 run_echo "mkdir ${rootmnt}$BASE/system"
 run_echo "mkdir ${rootmnt}$BASE/tmp"

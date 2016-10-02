@@ -12,7 +12,7 @@ else
 	T="${1%/}"
 fi
 
-T=`grep "^[^ ]* $T aufs" /proc/mounts`
+T=`grep "^[^ ]* $T overlay" /proc/mounts`
 
 [ -z "$T" ] && exit 1
 
