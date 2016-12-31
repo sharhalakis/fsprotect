@@ -20,4 +20,5 @@ manual_add_modules aufs
 
 copy_exec /bin/grep "/bin"
 copy_exec /bin/is_aufs "/bin"
+copy_exec /usr/bin/touch "/bin"
 

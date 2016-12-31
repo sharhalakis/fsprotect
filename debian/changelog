@@ -1,3 +1,15 @@
+fsprotect (1.0.6) unstable; urgency=low
+
+  * Copy /usr/bin/touch as well to initramfs (Closes: #628796) 
+  * Standards version 3.9.3:
+    + Machine readable copyright file.
+  * Override lintian informational message about 'status' support in init
+    script.
+  * Change pointing license file to GPL-2 instead of GPL. Fixes lintian
+    warning.
+
+ -- Stefanos Harhalakis <v13@v13.gr>  Mon, 27 Feb 2012 20:54:18 +0000
+
 fsprotect (1.0.5) unstable; urgency=low
 
   * Add support for "auto" size to use 50% of system memory (Closes: #564141)
