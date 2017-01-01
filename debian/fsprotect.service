@@ -1,5 +1,6 @@
 [Unit]
 Description=Lock/protect filesystems
+Documentation=file:/usr/share/doc/fsprotect/README.Debian
 After=local-fs.target
 DefaultDependencies=no
 
