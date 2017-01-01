@@ -1,3 +1,20 @@
+fsprotect (1.0.7) unstable; urgency=medium
+
+  * Depend on aufs-dkms now that it's back in Debian (Closes: #819992)
+  * Privide a systemd service file (Closes: #796617)
+  * Fix for systemd: Mark / as a private mount momentarily in order to move
+    partitions under it
+  * Fix debian/rules to use binary-install instead of binary
+  * Suffix DEBIAN_DH_ vars with package name in debian/rules
+  * Add Vcs-Git
+  * Depend on lsb-base
+  * Bump compatibility level to 10
+  * Bump standards version to 3.9.8
+  * Ignore init.d-script-does-not-implement-optional-option since status makes
+    little sense for the init script, plus systemd provides this already
+
+ -- Stefanos Harhalakis <v13@v13.gr>  Sun, 01 Jan 2017 22:14:30 +0000
+
 fsprotect (1.0.6) unstable; urgency=low
 
   * Copy /usr/bin/touch as well to initramfs (Closes: #628796) 
