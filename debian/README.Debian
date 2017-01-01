@@ -18,17 +18,15 @@ aufs
 ----
 
 In order for fsprotect to work, the system must support aufs. For debian
-systems:
+systems >= stretch:
 
-  * For older kernels (<=2.6.30) install aufs-source and module-assistant
-    and run:
-      # m-a prepare aufs
-      # m-a build aufs
-      # m-a install aufs
+  * Make sure you have the linux kernel headers installed. E.g:
+
+      # apt-get install linux-headers-amd64
+
+  * Rebuild initramfs to include aufs:
+
       # update-initramfs -u
-
-  * For more recent kernels (>=2.6.31-1) nothing is needed. They already
-    include aufs as a module (see bug #541828).
 
 Documentation
 -------------
