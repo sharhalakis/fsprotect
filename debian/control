@@ -8,7 +8,7 @@ Homepage: http://www.v13.gr/
 
 Package: fsprotect
 Architecture: all
-Depends: initramfs-tools, ${misc:Depends}
+Depends: initramfs-tools, aufs-dkms, ${misc:Depends}
 Description: Helper scripts to make filesystems immutable
  This is a set of scripts that make immutable the root and other filesystems.
  Using aufs they pack a tmpfs filesystem and the filesystem forcing
