@@ -152,7 +152,17 @@ chmod --reference="$MP" "$DSTTMP"
 mount -o bind "${MP}" "$DSTORIG"
 mount -t aufs -o "dirs=$DSTTMP=rw:$DSTORIG=ro" none "$DSTAUFS"
 # Move this here, in case it has other filesystems mounted beneath it
+
+# Ensure it's a private mount
+PROPAGATION=$(findmnt -o PROPAGATION -n -M /)
+if [ ! "$PROPAGATION" = "private" ] ; then
+	mount --make-private /
+fi
+# Move it
 mount --move "$MP" "$DSTMOVE"
+# Restore propagation
+mount --make-$PROPAGATION /
+
 mount -o bind "$DSTAUFS" "$MP"
 umount "$DSTAUFS"
 # Move filesystems outside of it
