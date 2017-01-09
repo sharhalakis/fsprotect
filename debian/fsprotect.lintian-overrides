@@ -1,1 +1,3 @@
-init.d-script-does-not-implement-optional-option
+# status makes little sense for the init script, plus systemd provides
+# this already
+fsprotect binary: init.d-script-does-not-implement-optional-option
